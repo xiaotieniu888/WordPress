@@ -1,0 +1,36 @@
+name: Sync Upstream WordPress/WordPress
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: sync-upstream-wordpress
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Add upstream remote
+        run: git remote add upstream https://github.com/WordPress/WordPress.git
+
+      - name: Fetch all commits and tags
+        run: git fetch upstream --tags
+
+      - name: Sync master branch
+        run: |
+          git checkout master
+          git merge upstream/master --ff-only
+          git push origin master
+
+      - name: Push all tags
+        run: git push origin --tags
